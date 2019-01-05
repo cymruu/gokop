@@ -6,6 +6,6 @@ type IClient interface {
 
 	Userkey() string
 
-	APIVersion() string
+	APIVersion() APIVersionT
 	Useragent() string
 }

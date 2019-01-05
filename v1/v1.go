@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	_userAgent = "gokop 0.0.1 v1"
-	apiVersion = "v1"
+	apiVersion = gokop.APIVersionV1
 	APIURL     = "https://a.wykop.pl"
 	//response types
 	responseJSON  = "json"
@@ -20,6 +19,7 @@ const (
 	outputCLEAR = "clear"
 )
 
+type ErrorHandlerF func(*models.ErrorResponse, *gokop.WykopRequest)
 type WykopAPIV1 struct {
 	*gokop.WykopAPI
 
@@ -27,6 +27,8 @@ type WykopAPIV1 struct {
 
 	useragent string
 	baseURL   string
+
+	errorHandlers map[int]ErrorHandlerF
 }
 
 func (w *WykopAPIV1) Useragent() string {
@@ -39,7 +41,7 @@ func (w *WykopAPIV1) Useragent() string {
 func (w *WykopAPIV1) SetUseragent(useragent string) {
 	w.useragent = useragent
 }
-func (w *WykopAPIV1) APIVersion() string {
+func (w *WykopAPIV1) APIVersion() gokop.APIVersionT {
 	return apiVersion
 }
 func (w *WykopAPIV1) Userkey() string {
@@ -53,15 +55,16 @@ func CreateWykopV1API(apikey, secret, userkey string) *WykopAPIV1 {
 
 	WykopAPI := gokop.CreateAPIBase(apikey, secret)
 	apiClient := &WykopAPIV1{
-		WykopAPI: &WykopAPI,
-		baseURL:  APIURL,
+		WykopAPI:      &WykopAPI,
+		baseURL:       APIURL,
+		errorHandlers: make(map[int]ErrorHandlerF),
 	}
 	return apiClient
 }
-func (w *WykopAPIV1) request(endpoint string, optionalParams ...gokop.RequestOptionalParam) *gokop.WykopRequest {
-	return gokop.CreateRequest(w, w.baseURL, endpoint, optionalParams...)
+func (w *WykopAPIV1) request(endpoint string, optionalParams ...WykopRequestV1OptionalParamF) *WykopRequestV1 {
+	return CreateRequest(w, w.baseURL, endpoint, optionalParams...)
 }
-func (w *WykopAPIV1) MakeRequest(endpoint string, target interface{}, optionalParams ...gokop.RequestOptionalParam) error {
+func (w *WykopAPIV1) MakeRequest(endpoint string, target interface{}, optionalParams ...WykopRequestV1OptionalParamF) error {
 	req := w.request(endpoint, optionalParams...)
 	data, err := w.SendRequest(req)
 	if err != nil {

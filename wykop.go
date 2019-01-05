@@ -1,15 +1,12 @@
 package gokop
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"sort"
-	"strings"
 	"time"
 )
 
@@ -18,6 +15,12 @@ const DefaultUseragent = "gokop 0.0.1"
 
 // //A function type to receive response
 // type ResponseHandler func(errorTarget interface{}, target interface{})
+type APIVersionT uint8
+
+const (
+	APIVersionV1 APIVersionT = 1
+	APIVersionV2 APIVersionT = 2
+)
 
 //WykopAPI base struct
 type WykopAPI struct {
@@ -43,31 +46,11 @@ func (w *WykopAPI) APIKey() string {
 func (w *WykopAPI) Secret() string {
 	return w.secret
 }
-func (w *WykopAPI) SignRequest(req *WykopRequest) {
-	tosign := w.secret + req.BuildURL()
-	if req.postParams != nil {
-		keys := make([]string, len(req.postParams))
-		for k := range req.postParams {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, v := range keys {
-			tosign += req.postParams[v][0] + ","
-		}
-		tosign = tosign[:len(tosign)-1]
-	}
-	w.logger.Println(tosign)
-	checksum := md5.Sum([]byte(tosign))
-	req.Header.Add("apisign", fmt.Sprintf("%x", checksum))
-	w.logger.Println(req.Header.Get("apisign"))
-}
-func (w *WykopAPI) SendRequest(req *WykopRequest) ([]byte, error) {
+func (w *WykopAPI) SendRequest(req IWykopRequest) ([]byte, error) {
 	if !req.IsSigned() {
-		w.SignRequest(req)
+		req.Sign(w)
 	}
-	requestMethod := req.Method()
-	request, _ := http.NewRequest(requestMethod.ToString(), req.BuildURL(), strings.NewReader(req.postParams.Encode()))
-	request.Header = req.Header
+	request := req.ToHttpRequest()
 	res, err := w.httpClient.Do(request)
 	if err != nil {
 		fmt.Println(err)
