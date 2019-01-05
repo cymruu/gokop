@@ -7,5 +7,7 @@ type IClient interface {
 	Userkey() string
 
 	APIVersion() APIVersionT
+	APIURL() string
+
 	Useragent() string
 }

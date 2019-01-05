@@ -1,12 +1,14 @@
 package gokop
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -46,19 +48,23 @@ func (w *WykopAPI) APIKey() string {
 func (w *WykopAPI) Secret() string {
 	return w.secret
 }
+
 func (w *WykopAPI) SendRequest(req IWykopRequest) ([]byte, error) {
 	if !req.IsSigned() {
-		req.Sign(w)
+		w.Sign(req)
 	}
-	request := req.ToHttpRequest()
+	request, err := req.ToRequest()
+	if err != nil {
+		return nil, err
+	}
 	res, err := w.httpClient.Do(request)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 	defer res.Body.Close()
-	data, _ := ioutil.ReadAll(res.Body)
-	return data, nil
+	data, err := ioutil.ReadAll(res.Body)
+	return data, err
 }
 func DecodeJSON(data []byte, target interface{}) error {
 	switch v := target.(type) {
@@ -68,4 +74,23 @@ func DecodeJSON(data []byte, target interface{}) error {
 	default:
 		return json.Unmarshal(data, target)
 	}
+}
+func (w *WykopAPI) Sign(req IWykopRequest) {
+	tosign := w.Secret() + req.BuildURL()
+	postParams := req.GetPostParams()
+	if postParams != nil {
+		keys := make([]string, len(postParams))
+		for k := range postParams {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, v := range keys {
+			tosign += postParams[v][0] + ","
+		}
+		tosign = tosign[:len(tosign)-1]
+	}
+	fmt.Println(tosign)
+	checksum := md5.Sum([]byte(tosign))
+	req.GetHeaders().Add("apisign", fmt.Sprintf("%x", checksum))
+	fmt.Println(req.GetHeaders().Get("apisign"))
 }

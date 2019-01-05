@@ -24,14 +24,15 @@ type APIParam struct {
 }
 type RequestOptionalParam func(*WykopRequest)
 type IWykopRequest interface {
-	Sign(*WykopAPI)
 	IsSigned() bool
 	Method() requestMethod
-	//build url is nonsense, Request has to create http.Request object and then we can send http request
-	BuildURL() string
 
-	ToHttpRequest() *http.Request
-	Send() ([]byte, error)
+	BuildURL() string
+	ToRequest() (*http.Request, error)
+	// Send() ([]byte, error)
+
+	GetHeaders() http.Header
+	GetPostParams() url.Values
 }
 type WykopRequest struct {
 	_v APIVersionT //verion of api
@@ -50,10 +51,6 @@ func InitializeRequest() *WykopRequest {
 		PostParams: make(url.Values),
 	}
 }
-
-// func (w *WykopRequest) AddPostParam(params ...APIParam) {
-
-// }
 func SetPostParams(params url.Values) RequestOptionalParam {
 	return func(r *WykopRequest) {
 		r.PostParams = params
@@ -67,4 +64,10 @@ func (req *WykopRequest) Method() requestMethod {
 		return POST
 	}
 	return GET
+}
+func (req *WykopRequest) GetPostParams() url.Values {
+	return req.PostParams
+}
+func (req *WykopRequest) GetHeaders() http.Header {
+	return req.Header
 }

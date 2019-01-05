@@ -1,9 +1,8 @@
 package v1
 
 import (
-	"crypto/md5"
 	"fmt"
-	"sort"
+	"net/http"
 	"strings"
 
 	"github.com/cymruu/gokop"
@@ -22,20 +21,23 @@ type WykopRequestV1 struct {
 	methodParams MethodParams
 }
 
-func CreateRequest(client gokop.IClient, url, endpoint string, optionalParams ...WykopRequestV1OptionalParamF) *WykopRequestV1 {
+func CreateRequest(client gokop.IClient, endpoint string, optionalParams ...WykopRequestV1OptionalParamF) *WykopRequestV1 {
 	req := &WykopRequestV1{
 		gokop.InitializeRequest(), make([]APIParam, 0), make(MethodParams, 0),
 	}
+	req.URL = client.APIURL()
+	req.Endpoint = endpoint
 	if client.Userkey() != "" {
 		req._APIParams = append(req._APIParams, APIParam{"userkey", client.Userkey()})
 	}
+	req._APIParams = append(req._APIParams, APIParam{"appkey", client.APIKey()})
 	for _, param := range optionalParams {
 		param(req)
 	}
+
 	if req.Method() == gokop.POST {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
-
 	req.Header.Add("User-Agent", client.Useragent())
 	return req
 }
@@ -49,23 +51,13 @@ func AddAPIParams(params ...APIParam) WykopRequestV1OptionalParamF {
 		r._APIParams = append(r._APIParams, params...)
 	}
 }
-func (req *WykopRequestV1) Sign(w *WykopAPIV1) {
-	tosign := w.Secret() + req.BuildURL()
-	if req.PostParams != nil {
-		keys := make([]string, len(req.PostParams))
-		for k := range req.PostParams {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, v := range keys {
-			tosign += req.PostParams[v][0] + ","
-		}
-		tosign = tosign[:len(tosign)-1]
+func (req *WykopRequestV1) ToRequest() (*http.Request, error) {
+	request, err := http.NewRequest(req.Method().ToString(), req.BuildURL(), strings.NewReader(req.PostParams.Encode()))
+	if err != nil {
+		return nil, err
 	}
-	fmt.Println(tosign)
-	checksum := md5.Sum([]byte(tosign))
-	req.Header.Add("apisign", fmt.Sprintf("%x", checksum))
-	fmt.Println(req.Header.Get("apisign"))
+	request.Header = req.Header
+	return request, nil
 }
 func (req *WykopRequestV1) BuildURL() string {
 	URL := fmt.Sprintf("%s/%s/", strings.TrimSuffix(req.URL, "/"), req.Endpoint)

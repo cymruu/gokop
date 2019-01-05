@@ -41,6 +41,9 @@ func (w *WykopAPIV1) Useragent() string {
 func (w *WykopAPIV1) SetUseragent(useragent string) {
 	w.useragent = useragent
 }
+func (w *WykopAPIV1) APIURL() string {
+	return APIURL
+}
 func (w *WykopAPIV1) APIVersion() gokop.APIVersionT {
 	return apiVersion
 }
@@ -62,7 +65,7 @@ func CreateWykopV1API(apikey, secret, userkey string) *WykopAPIV1 {
 	return apiClient
 }
 func (w *WykopAPIV1) request(endpoint string, optionalParams ...WykopRequestV1OptionalParamF) *WykopRequestV1 {
-	return CreateRequest(w, w.baseURL, endpoint, optionalParams...)
+	return CreateRequest(w, endpoint, optionalParams...)
 }
 func (w *WykopAPIV1) MakeRequest(endpoint string, target interface{}, optionalParams ...WykopRequestV1OptionalParamF) error {
 	req := w.request(endpoint, optionalParams...)
