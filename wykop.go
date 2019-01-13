@@ -18,6 +18,14 @@ const DefaultUseragent = "gokop 0.0.1"
 // //A function type to receive response
 // type ResponseHandler func(errorTarget interface{}, target interface{})
 type APIVersionT uint8
+type HTMLError struct {
+	Message string
+	Code    int
+}
+
+func (h *HTMLError) Error() string {
+	return fmt.Sprintf("HTMLCode (wtf?) Response Code: %d\nHTML:\n%s", h.Code, h.Message)
+}
 
 const (
 	APIVersionV1 APIVersionT = 1
@@ -53,17 +61,21 @@ func (w *WykopAPI) SendRequest(req IWykopRequest) ([]byte, error) {
 	if !req.IsSigned() {
 		w.Sign(req)
 	}
-	request, err := req.ToRequest()
+	request, err := req.ToHTTPRequest()
 	if err != nil {
 		return nil, err
 	}
 	res, err := w.httpClient.Do(request)
 	if err != nil {
-		fmt.Println(err)
+
 		return nil, err
 	}
 	defer res.Body.Close()
 	data, err := ioutil.ReadAll(res.Body)
+	if res.StatusCode != 200 {
+		err = &HTMLError{Message: string(data), Code: res.StatusCode}
+		return nil, err
+	}
 	return data, err
 }
 func DecodeJSON(data []byte, target interface{}) error {
@@ -78,10 +90,12 @@ func DecodeJSON(data []byte, target interface{}) error {
 func (w *WykopAPI) Sign(req IWykopRequest) {
 	tosign := w.Secret() + req.BuildURL()
 	postParams := req.GetPostParams()
-	if postParams != nil {
+	if len(postParams) > 0 {
 		keys := make([]string, len(postParams))
+		i := 0
 		for k := range postParams {
-			keys = append(keys, k)
+			keys[i] = k
+			i++
 		}
 		sort.Strings(keys)
 		for _, v := range keys {
@@ -89,8 +103,6 @@ func (w *WykopAPI) Sign(req IWykopRequest) {
 		}
 		tosign = tosign[:len(tosign)-1]
 	}
-	fmt.Println(tosign)
 	checksum := md5.Sum([]byte(tosign))
 	req.GetHeaders().Add("apisign", fmt.Sprintf("%x", checksum))
-	fmt.Println(req.GetHeaders().Get("apisign"))
 }

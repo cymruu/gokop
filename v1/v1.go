@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"fmt"
-
 	"github.com/cymruu/gokop"
 	"github.com/cymruu/gokop/v1/models"
 )
@@ -64,16 +62,14 @@ func CreateWykopV1API(apikey, secret, userkey string) *WykopAPIV1 {
 	}
 	return apiClient
 }
-func (w *WykopAPIV1) request(endpoint string, optionalParams ...WykopRequestV1OptionalParamF) *WykopRequestV1 {
+func (w *WykopAPIV1) request(endpoint string, optionalParams ...OptionalParamV1) *WykopRequestV1 {
 	return CreateRequest(w, endpoint, optionalParams...)
 }
-func (w *WykopAPIV1) MakeRequest(endpoint string, target interface{}, optionalParams ...WykopRequestV1OptionalParamF) error {
-	req := w.request(endpoint, optionalParams...)
+func (w *WykopAPIV1) MakeRequest(req *WykopRequestV1, target interface{}) error {
 	data, err := w.SendRequest(req)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(data))
 	APIErr := models.ErrorResponse{}
 	err = gokop.DecodeJSON(data, &APIErr)
 	if err != nil {

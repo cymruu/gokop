@@ -6,6 +6,7 @@ import (
 )
 
 type requestMethod uint8
+type OptionalParamF func(interface{})
 
 func (r requestMethod) ToString() string {
 	names := []string{"GET", "POST"}
@@ -17,22 +18,21 @@ const (
 	POST requestMethod = 1
 )
 
-type MethodParam string
 type APIParam struct {
 	name  string
 	value string
 }
-type RequestOptionalParam func(*WykopRequest)
 type IWykopRequest interface {
 	IsSigned() bool
 	Method() requestMethod
 
 	BuildURL() string
-	ToRequest() (*http.Request, error)
-	// Send() ([]byte, error)
+	ToHTTPRequest() (*http.Request, error)
 
 	GetHeaders() http.Header
+
 	GetPostParams() url.Values
+	SetPostParams(url.Values)
 }
 type WykopRequest struct {
 	_v APIVersionT //verion of api
@@ -51,11 +51,6 @@ func InitializeRequest() *WykopRequest {
 		PostParams: make(url.Values),
 	}
 }
-func SetPostParams(params url.Values) RequestOptionalParam {
-	return func(r *WykopRequest) {
-		r.PostParams = params
-	}
-}
 func (req *WykopRequest) IsSigned() bool {
 	return req.Header.Get("apisign") != ""
 }
@@ -67,6 +62,9 @@ func (req *WykopRequest) Method() requestMethod {
 }
 func (req *WykopRequest) GetPostParams() url.Values {
 	return req.PostParams
+}
+func (req *WykopRequest) SetPostParams(params url.Values) {
+	req.PostParams = params
 }
 func (req *WykopRequest) GetHeaders() http.Header {
 	return req.Header

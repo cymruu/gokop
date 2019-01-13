@@ -1,5 +1,9 @@
 package models
 
+import (
+	"github.com/cymruu/gokop"
+)
+
 type Entry struct {
 	ID                int64          `json:"id"`
 	Author            string         `json:"author"`
@@ -7,8 +11,8 @@ type Entry struct {
 	AuthorAvatarBig   string         `json:"author_avatar_big"`
 	AuthorAvatarMed   string         `json:"author_avatar_med"`
 	AuthorAvatarLo    string         `json:"author_avatar_lo"`
-	AuthorGroup       uint16         `json:"author_group"`
-	AuthorSex         string         `json:"author_sex"`
+	AuthorGroup       Usergroup      `json:"author_group"`
+	AuthorSex         Sex            `json:"author_sex"`
 	Date              WykopTime      `json:"date"`
 	Body              string         `json:"body"`
 	Source            string         `json:"source"`
@@ -18,8 +22,8 @@ type Entry struct {
 	ReceiverAvatarBig string         `json:"receiver_avatar_big"`
 	ReceiverAvatarMed string         `json:"receiver_avatar_med"`
 	ReceiverAvatarLo  string         `json:"receiver_avatar_lo"`
-	ReceiverGroup     string         `json:"receiver_group"`
-	ReceiverSex       string         `json:"receiver_sex"`
+	ReceiverGroup     Usergroup      `json:"receiver_group"`
+	ReceiverSex       Sex            `json:"receiver_sex"`
 	Comments          []EntryComment `json:"comments"`
 	Blocked           bool           `json:"blocked"`
 	VoteCount         int            `json:"vote_count"`
@@ -27,7 +31,7 @@ type Entry struct {
 	UserFavorite      bool           `json:"user_favorite"`
 	Voters            []Voter        `json:"voters"`
 	Type              string         `json:"type"`
-	Embed             string         `json:"embed"`
+	Embed             interface{}    `json:"embed"`
 	Deleted           bool           `json:"deleted"`
 	ViolationURL      string         `json:"violation_url"`
 	CanComment        bool           `json:"can_comment"`
@@ -42,8 +46,8 @@ type EntryComment struct {
 	AuthorAvatarBig string    `json:"author_avatar_big"`
 	AuthorAvatarMed string    `json:"author_avatar_med"`
 	AuthorAvatarLo  string    `json:"author_avatar_lo"`
-	AuthorGroup     uint16    `json:"author_group"`
-	AuthorSex       string    `json:"author_sex"`
+	AuthorGroup     Usergroup `json:"author_group"`
+	AuthorSex       Sex       `json:"author_sex"`
 	Date            WykopTime `json:"date"`
 	Body            string    `json:"body"`
 	Source          string    `json:"source"`
@@ -61,11 +65,15 @@ type EntryComment struct {
 
 type Voter struct {
 	Author          string    `json:"author"`
-	AuthorGroup     int       `json:"author_group"`
+	AuthorGroup     Usergroup `json:"author_group"`
 	AuthorAvatar    string    `json:"author_avatar"`
 	AuthorAvatarBig string    `json:"author_avatar_big"`
 	AuthorAvatarMed string    `json:"author_avatar_med"`
 	AuthorAvatarLo  string    `json:"author_avatar_lo"`
-	AuthorSex       string    `json:"author_sex"`
+	AuthorSex       Sex       `json:"author_sex"`
 	Date            WykopTime `json:"date"`
+}
+
+func (e *Entry) AddComment(client gokop.IWykopClient, body string, embed *string) {
+
 }

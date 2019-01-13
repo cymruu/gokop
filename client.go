@@ -1,6 +1,6 @@
 package gokop
 
-type IClient interface {
+type IWykopClient interface {
 	APIKey() string
 	Secret() string
 
@@ -10,4 +10,6 @@ type IClient interface {
 	APIURL() string
 
 	Useragent() string
+
+	SendRequest(req IWykopRequest) ([]byte, error)
 }

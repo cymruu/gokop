@@ -8,12 +8,12 @@ import (
 	"github.com/cymruu/gokop"
 )
 
+type OptionalParamV1 func(*WykopRequestV1)
 type MethodParams []string
 type APIParam struct {
-	name  string
-	value string
+	Name  string
+	Value string
 }
-type WykopRequestV1OptionalParamF func(*WykopRequestV1)
 type WykopRequestV1 struct {
 	*gokop.WykopRequest
 	//params
@@ -21,7 +21,7 @@ type WykopRequestV1 struct {
 	methodParams MethodParams
 }
 
-func CreateRequest(client gokop.IClient, endpoint string, optionalParams ...WykopRequestV1OptionalParamF) *WykopRequestV1 {
+func CreateRequest(client gokop.IWykopClient, endpoint string, optionalParams ...OptionalParamV1) *WykopRequestV1 {
 	req := &WykopRequestV1{
 		gokop.InitializeRequest(), make([]APIParam, 0), make(MethodParams, 0),
 	}
@@ -41,17 +41,17 @@ func CreateRequest(client gokop.IClient, endpoint string, optionalParams ...Wyko
 	req.Header.Add("User-Agent", client.Useragent())
 	return req
 }
-func AddMethodParams(params MethodParams) WykopRequestV1OptionalParamF {
-	return func(r *WykopRequestV1) {
-		r.methodParams = append(r.methodParams, params...)
+func OpMethodParams(params ...string) OptionalParamV1 {
+	return func(req *WykopRequestV1) {
+		req.methodParams = append(req.methodParams, params...)
 	}
 }
-func AddAPIParams(params ...APIParam) WykopRequestV1OptionalParamF {
-	return func(r *WykopRequestV1) {
-		r._APIParams = append(r._APIParams, params...)
+func OPAPIParams(params ...APIParam) OptionalParamV1 {
+	return func(req *WykopRequestV1) {
+		req._APIParams = append(req._APIParams, params...)
 	}
 }
-func (req *WykopRequestV1) ToRequest() (*http.Request, error) {
+func (req *WykopRequestV1) ToHTTPRequest() (*http.Request, error) {
 	request, err := http.NewRequest(req.Method().ToString(), req.BuildURL(), strings.NewReader(req.PostParams.Encode()))
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (req *WykopRequestV1) BuildURL() string {
 	}
 	if req._APIParams != nil {
 		for x := range req._APIParams {
-			URL += fmt.Sprintf("%s,%s,", req._APIParams[x].name, req._APIParams[x].value)
+			URL += fmt.Sprintf("%s,%s,", req._APIParams[x].Name, req._APIParams[x].Value)
 		}
 	}
 	return strings.TrimSuffix(URL, ",")
