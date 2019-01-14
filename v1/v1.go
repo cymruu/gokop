@@ -36,7 +36,7 @@ func (w *WykopAPIV1) AddDefaultParameters(params ...OptionalParamV1) {
 }
 func (w *WykopAPIV1) Useragent() string {
 	userAgent := gokop.DefaultUseragent
-	if w.userkey != "" {
+	if w.useragent != "" {
 		userAgent = w.useragent
 	}
 	return userAgent
@@ -78,6 +78,9 @@ func (w *WykopAPIV1) MakeRequest(req *WykopRequestV1, target interface{}) error 
 	APIErr := models.ErrorResponse{}
 	err = gokop.DecodeJSON(data, &APIErr)
 	if err != nil {
+		return err
+	}
+	if APIErr.ErrorObject.Code != 0 {
 		return &APIErr
 	}
 	return gokop.DecodeJSON(data, &target)

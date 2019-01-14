@@ -18,10 +18,6 @@ const (
 	POST requestMethod = 1
 )
 
-type APIParam struct {
-	name  string
-	value string
-}
 type IWykopRequest interface {
 	IsSigned() bool
 	Method() requestMethod

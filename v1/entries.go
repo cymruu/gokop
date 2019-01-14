@@ -7,9 +7,10 @@ import (
 	"github.com/cymruu/gokop/v1/models"
 )
 
-func (w *WykopAPIV1) Index(entryID int64) (*models.Entry, error) {
+func (w *WykopAPIV1) Index(entryID int64, params ...OptionalParamV1) (*models.Entry, error) {
+	params = append(params, OpMethodParams(strconv.FormatInt(entryID, 10)))
 	resp := new(models.Entry)
-	req := w.request("entries/index", OpMethodParams(strconv.FormatInt(entryID, 10)))
+	req := w.request("entries/index", params...)
 	err := w.MakeRequest(req, &resp)
 	return resp, err
 }
