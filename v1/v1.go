@@ -78,6 +78,9 @@ func (w *WykopAPIV1) MakeRequest(req *WykopRequestV1, target interface{}) error 
 	APIErr := models.ErrorResponse{}
 	err = gokop.DecodeJSON(data, &APIErr)
 	if err != nil {
+		return err
+	}
+	if APIErr.ErrorObject.Code != 0 {
 		return &APIErr
 	}
 	return gokop.DecodeJSON(data, &target)
