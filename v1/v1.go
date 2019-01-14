@@ -27,8 +27,13 @@ type WykopAPIV1 struct {
 	baseURL   string
 
 	errorHandlers map[int]ErrorHandlerF
+
+	defaultOptions []OptionalParamV1
 }
 
+func (w *WykopAPIV1) AddDefaultParameters(params ...OptionalParamV1) {
+	w.defaultOptions = append(w.defaultOptions, params...)
+}
 func (w *WykopAPIV1) Useragent() string {
 	userAgent := gokop.DefaultUseragent
 	if w.userkey != "" {

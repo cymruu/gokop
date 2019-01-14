@@ -21,9 +21,9 @@ type WykopRequestV1 struct {
 	methodParams MethodParams
 }
 
-func CreateRequest(client gokop.IWykopClient, endpoint string, optionalParams ...OptionalParamV1) *WykopRequestV1 {
+func CreateRequest(client *WykopAPIV1, endpoint string, optionalParams ...OptionalParamV1) *WykopRequestV1 {
 	req := &WykopRequestV1{
-		gokop.InitializeRequest(), make([]APIParam, 0), make(MethodParams, 0),
+		gokop.InitializeRequest(client.APIVersion()), make([]APIParam, 0), make(MethodParams, 0),
 	}
 	req.URL = client.APIURL()
 	req.Endpoint = endpoint
@@ -31,6 +31,9 @@ func CreateRequest(client gokop.IWykopClient, endpoint string, optionalParams ..
 		req._APIParams = append(req._APIParams, APIParam{"userkey", client.Userkey()})
 	}
 	req._APIParams = append(req._APIParams, APIParam{"appkey", client.APIKey()})
+	for _, param := range client.defaultOptions {
+		param(req)
+	}
 	for _, param := range optionalParams {
 		param(req)
 	}

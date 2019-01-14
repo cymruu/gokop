@@ -45,8 +45,9 @@ type WykopRequest struct {
 	PostParams url.Values
 }
 
-func InitializeRequest() *WykopRequest {
+func InitializeRequest(version APIVersionT) *WykopRequest {
 	return &WykopRequest{
+		_v:         version,
 		Header:     make(http.Header),
 		PostParams: make(url.Values),
 	}
